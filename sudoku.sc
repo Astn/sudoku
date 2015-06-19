@@ -23,7 +23,7 @@ class SudokuBoard(val values:Array[Int]) {
       cell(sg._1+0, sg._2+0),cell(sg._1+0, sg._2+1),cell(sg._1+0, sg._2+2),
       cell(sg._1+1, sg._2+0),cell(sg._1+1, sg._2+1),cell(sg._1+1, sg._2+2),
       cell(sg._1+2, sg._2+0),cell(sg._1+2, sg._2+1),cell(sg._1+2, sg._2+2)
-    )
+    ) 
   }
   //  def values(set:Set) = set match {
   //    case Row(r) => rowValues(r)
