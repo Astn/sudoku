@@ -1,5 +1,3 @@
-val foo = TestSudoku.assertSudokuSolves(TestSudoku.sudokuBoard00, TestSudoku.doesBoardSolve)//TestSudoku.solveSudokuTest()
-val bar = TestSudoku.assertSudokuSolves(TestSudoku.sudokuBoard1, TestSudoku.doesBoardSolve)//TestSudoku.solveSudokuTest()
 object TestSudoku {
   val sudokuBoard0 = Array(
     0,2,3,4,5,6,7,8,9,
@@ -318,111 +316,6 @@ object TestSudoku {
     cells.toSet
   }
 
-  def bestCell(board: Array[Int]) = {
-
-    val res = board.zipWithIndex
-      .filter(x => board.apply(x._2) == 0)
-      .map{ case (idxValue,idx) => {
-      (idx,
-        ((1 to 9).toSet --
-          inSubGrid(board, idx) --
-          inCol(board, idx) --
-          inRow(board, idx))
-          .toSeq.sortBy(cellValue => {
-                val otherValues = otherRows(rowIndex(idx))
-                  .toSeq
-                  .map(rowIdx => inRowIndex(board, rowIdx).toSeq)
-                  .flatMap(x => x) ++
-                  otherCols(colIndex(idx))
-                    .toSeq
-                    .map(colIdx => inColIndex(board, colIdx).toSeq)
-                    .flatMap(x => x)
-
-                otherValues
-                  .filter(x => x == cellValue)
-                  .length
-              }).reverse
-        )
-    }}
-      .sortBy(x => x._2.size)
-      .filter(x => x._2.size > 0)
-
-
-    res
-  }
-
-  def sudokuToString(board: Array[Int]): String = {
-    val length = Stream.from(2).filter(x => x * x >= board.length).head
-    val hline = "+" + Seq.range(0, 6 + length * 2)
-      .map(x => if (x % 8 == 7) "+" else "-")
-      .foldLeft(StringBuilder.newBuilder)((sb, s) => {
-      sb.append(s)
-    }).toString() + "\n"
-    val sb = board.foldLeft((StringBuilder.newBuilder, 0))((bi, item) => {
-      val b = bi._1
-      var i = bi._2
-      b.append(if (i % length == 0 && i % (length * 3) == 0) hline else "")
-      b.append(if (i % length == 0 && item == 0) f"|  "
-      else if (i % 3 != 2 && i % length != length - 1 && item == 0) f"  "
-      else if (i % 3 == 2 && i % length != length - 1 && item == 0) f"   |"
-      else if (item == 0) f"   |%n"
-      else if (i % length == 0) f"| $item%1d"
-      else if (i % 3 != 2 && i % length != length - 1) f" $item%1d"
-      else if (i % 3 == 2 && i % length != length - 1) f" $item%1d |"
-      else f" $item%1d |%n")
-      (b, i + 1)
-    })
-    "\n" + sb._1.append(hline).toString() + "\n"
-  }
-
-  // A standard Sudoku puzzle contains 81 cells, in a 9 by 9 grid, and has 9 zones, each zone being the
-  // intersection of 3 rows and 3 columns. Each cell may contain a number from one to nine; each number
-  // can only occur once in each zone, row, and column of the grid. At the beginning of the game, many
-  // cells begin with numbers in them, and the goal is to fill in the remaining cells. -- wikipedia
-
-  // Solve any 9x9 Sudoku board that is input as an array.
-  // Array values of 0 represent cells that must be solved for.
-  // Array values > 0 must not be modified.
-  // To solve: each number 1-9 must exist exactly 9 times, and never in the same row or same column as its self
-  // The only valid values are 1-9
-  // The more elegant the approach the better
-  def solveSudoku(input: Array[Int]): Array[Int] = {
-
-    val inputT = input.clone()
-    def searchSudoku(sudokuBoard: Array[Int], lastMove: (Int, Int)): Array[Int] = {
-      //println(lastMove)
-      //println(sudokuToString(sudokuBoard))
-      if (sudokuBoard.forall(x => x > 0)) sudokuBoard
-      else {
-        val boardOptions = bestCell(sudokuBoard)
-
-        if (boardOptions.toList.length == 0)
-          sudokuBoard
-        else {
-          val best = boardOptions.head
-          //println(f"bestCell $best")
-          val fail =
-            if (sudokuBoard.apply(best._1) == 0 && best._2.toList.length > 0) {
-              sudokuBoard.update(best._1, best._2.head)
-              false
-            }
-            else {
-              println(f"bestCell $best ${best._2.map(x => x.toString()).mkString(" ")}")
-              true
-            }
-          //val newPath:Vector[Vector[(Int,Int)]] =
-          //    if(path.nonEmpty) path.updated(path.length - 1, path.last :+ (best._1,best._2.head))
-          //    else Vector(Vector[(Int,Int)]((best._1,best._2.head)))
-
-          if (fail || lastMove ==(best._1, best._2.head)) sudokuBoard
-          else searchSudoku(sudokuBoard, (best._1, best._2.head)) //,newPath)
-        }
-      }
-    }
-    searchSudoku(inputT, (-1, -1))
-
-  }
-
   object Assert {
     class NullCoalesce[A <: AnyRef](a: A) {
       def ??(b: A) = if (a == null) b else a
@@ -450,6 +343,124 @@ object TestSudoku {
     }
   }
 
+  def sudokuToString(board: Array[Int]): String = {
+    val length = Stream.from(2).filter(x => x * x >= board.length).head
+    val hline = "+" + Seq.range(0, 6 + length * 2)
+      .map(x => if (x % 8 == 7) "+" else "-")
+      .foldLeft(StringBuilder.newBuilder)((sb, s) => {
+      sb.append(s)
+    }).toString() + "\n"
+    val sb = board.foldLeft((StringBuilder.newBuilder, 0))((bi, item) => {
+      val b = bi._1
+      var i = bi._2
+      b.append(if (i % length == 0 && i % (length * 3) == 0) hline else "")
+      b.append(if (i % length == 0 && item == 0) f"|  "
+      else if (i % 3 != 2 && i % length != length - 1 && item == 0) f"  "
+      else if (i % 3 == 2 && i % length != length - 1 && item == 0) f"   |"
+      else if (item == 0) f"   |%n"
+      else if (i % length == 0) f"| $item%1d"
+      else if (i % 3 != 2 && i % length != length - 1) f" $item%1d"
+      else if (i % 3 == 2 && i % length != length - 1) f" $item%1d |"
+      else f" $item%1d |%n")
+      (b, i + 1)
+    })
+    "\n" + sb._1.append(hline).toString() + "\n"
+  }
 
+  def bestCell(board: Array[Int]) : Array[(Int, Seq[Int])] = {
+
+    val res = board.zipWithIndex
+      .filter(x => board.apply(x._2) == 0)
+      .map{ case (idxValue,idx) => {
+      (idx,
+        ((1 to 9).toSet --
+          inSubGrid(board, idx) --
+          inCol(board, idx) --
+          inRow(board, idx))
+          .toSeq.sortBy(cellValue => {
+                val otherValues = otherRows(rowIndex(idx))
+                  .toSeq
+                  .map(rowIdx => inRowIndex(board, rowIdx).toSeq)
+                  .flatMap(x => x) ++
+                  otherCols(colIndex(idx))
+                    .toSeq
+                    .map(colIdx => inColIndex(board, colIdx).toSeq)
+                    .flatMap(x => x)
+
+                otherValues
+                  .filter(x => x == cellValue)
+                  .length
+              }).reverse
+        )
+    }}
+      .sortBy(x => x._2.size)
+      .filter(x => x._2.size > 0)
+    res
+  }
+
+
+  // A standard Sudoku puzzle contains 81 cells, in a 9 by 9 grid, and has 9 zones, each zone being the
+  // intersection of 3 rows and 3 columns. Each cell may contain a number from one to nine; each number
+  // can only occur once in each zone, row, and column of the grid. At the beginning of the game, many
+  // cells begin with numbers in them, and the goal is to fill in the remaining cells. -- wikipedia
+
+  // Solve any 9x9 Sudoku board that is input as an array.
+  // Array values of 0 represent cells that must be solved for.
+  // Array values > 0 must not be modified.
+  // To solve: each number 1-9 must exist exactly 9 times, and never in the same row or same column as its self
+  // The only valid values are 1-9
+  // The more elegant the approach the better
+  def solveSudoku(input: Array[Int]): Array[Int] = {
+    val inputT = input.clone()
+    def searchSudoku(sudokuBoard: Array[Int]): Array[Int] = {
+      val safeBoard = sudokuBoard.clone()
+
+      def backtracker(sb:Array[Int], allOps:Array[(Int, Seq[Int])]) : Array[Int] = {
+        allOps
+        .take(1)
+        .map{case (pos,opts) => {
+          opts
+            .take(2)
+            .map(cellValue => {
+              val cp = sb.clone()
+              cp.update(pos,cellValue)
+              cp
+            })
+          .map(searchSudoku)
+          .takeWhile(ss => ss.count(x=> x == 0) > 0)
+        }}
+        .flatMap(x=>x)
+        .sortBy(ss => ss.count(x => x == 0))
+        .head
+      }
+
+      if (sudokuBoard.forall(x => x > 0)) sudokuBoard
+      else {
+        val boardOptions = bestCell(sudokuBoard)
+
+        if (boardOptions.toList.length == 0)
+          sudokuBoard
+        else {
+          val best = boardOptions.head
+
+          val stuck =
+            if (sudokuBoard.apply(best._1) == 0 && best._2.toList.length > 0) {
+              false
+            }
+            else {
+              println(f"bestCell $best ${best._2.map(x => x.toString()).mkString(" ")}")
+              true
+            }
+
+          if (stuck) sudokuBoard
+          else backtracker(sudokuBoard, boardOptions)
+        }
+      }
+    }
+    searchSudoku(inputT)
+  }
+  val foo0 = assertSudokuSolves(sudokuBoard0, doesBoardSolve)
+  val foo00 = assertSudokuSolves(sudokuBoard00, doesBoardSolve)
+  val bar1 = assertSudokuSolves(sudokuBoard1, doesBoardSolve)
+  val bar2 = assertSudokuSolves(sudokuBoard2, doesBoardSolve)
 }
-
